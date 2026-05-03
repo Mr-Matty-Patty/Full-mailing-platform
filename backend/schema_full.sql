@@ -1,8 +1,12 @@
--- Run this once to set up the database from scratch.
--- If your DB already exists, run the migration_*.sql files instead.
-
-CREATE DATABASE IF NOT EXISTS mailapp;
-USE mailapp;
+-- schema_full.sql
+-- One-shot schema for a fresh Azure MySQL database.
+-- Run this AFTER you've created the `mailapp` database in Azure.
+--
+-- How to run from your laptop (after Azure provisioning finishes):
+--   mysql -h demetri-mahdi-db.mysql.database.azure.com \
+--         -u mailapp_admin -p \
+--         --ssl-mode=REQUIRED \
+--         mailapp < schema_full.sql
 
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
