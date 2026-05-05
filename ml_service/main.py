@@ -93,14 +93,24 @@ def predict(email: EmailRequest):
         raise HTTPException(status_code=503, detail="Phishing model not loaded")
 
     text = _build_text(email)
-    prediction = phishing_model.predict([text])[0]
     probabilities = phishing_model.predict_proba([text])[0]
-    confidence = round(float(probabilities[prediction]) * 100, 1)
+
+    # probabilities[1] is the model's confidence that the email IS phishing.
+    # Require >=85% before flagging — the raw model is over-eager on
+    # benign-but-urgent emails like university notices.
+    PHISHING_THRESHOLD = 0.85
+    phishing_prob = float(probabilities[1])
+    is_phishing = phishing_prob >= PHISHING_THRESHOLD
+
+    # Confidence shown to the user reflects the winning verdict's probability.
+    confidence = round(
+        (phishing_prob if is_phishing else (1.0 - phishing_prob)) * 100, 1
+    )
 
     return PhishingResponse(
-        verdict="Phishing" if prediction == 1 else "Legitimate",
+        verdict="Phishing" if is_phishing else "Legitimate",
         confidence=confidence,
-        is_phishing=bool(prediction == 1),
+        is_phishing=is_phishing,
     )
 
 
